@@ -2,11 +2,9 @@ import streamlit as st
 import pandas as pd
 import requests
 import time
-import streamlit as st
 import datetime
 import re
 import altair as alt  # Import Altair
-import pandas as pd
 import numpy as np
 import plotly.express as px
 import warnings 
@@ -71,6 +69,12 @@ with st.sidebar:
             mime = "text/csv"
         )
 
+# Sidebar filters for main interests
+view_by = st.sidebar.selectbox('View Main Interests By:', ['Sports', 'Country'])
+country_filter = st.sidebar.selectbox('Select Country:', df['Country'].unique())
+view_by_time = st.sidebar.selectbox('Select Time Granularity:', ['Day', 'Month'])
+selected_sports = st.sidebar.multiselect('Select Sports:', df['Sport'].unique(), default=df['Sport'].unique()[:5])
+
 # Real-time update placeholders
 data_placeholder = st.empty()
 metrics_placeholder = st.empty()
@@ -83,16 +87,9 @@ browser_placeholder = part3.empty()
 trend_placeholder = st.empty()
 sports_placeholder = st.empty()
 heatmap_placeholder = st.empty()
+df_placeholder = st.empty()  # Placeholder for DataFrame display
 
 # Real-time update loop
-# Sidebar filters for main interests
-
-df = sample_logs(fetch_logs())
-view_by = st.sidebar.selectbox('View Main Interests By:', ['Sports', 'Country'])
-country_filter = st.sidebar.selectbox('Select Country:', df['Country'].unique())
-view_by_time = st.sidebar.selectbox('Select Time Granularity:', ['Day', 'Month'])
-selected_sports = st.sidebar.multiselect('Select Sports:', df['Sport'].unique(), default=df['Sport'].unique()[:5])
-
 while True:
     # Fetch data
     df = sample_logs(fetch_logs())
@@ -153,7 +150,7 @@ while True:
 
     # Geographic Distribution of Views
     with geo_placeholder.container():
-        st.subheader('Geographic Distribution of Views')
+        #st.subheader('Geographic Distribution of Views')
         country_views = df['Country'].value_counts().reset_index()
         country_views.columns = ['Country', 'Views']
         fig_geo = px.choropleth(
@@ -162,12 +159,23 @@ while True:
             locationmode='country names',
             color="Views",
             hover_name="Country",
-            color_continuous_scale=px.colors.sequential.Plasma,
+            color_continuous_scale=px.colors.sequential.Viridis,
             title="Geographic Distribution of Views"
+        )
+        fig_geo.update_layout(
+            geo=dict(
+                showframe=False,
+                showcoastlines=False,
+                projection_type='equirectangular'
+            ),
+            title=dict(
+                x=0.5,
+                xanchor='center'
+            )
         )
         st.plotly_chart(fig_geo, use_container_width=True)
 
-        # Regular expressions to match different devices
+    # Regular expressions to match different devices
     windows_pattern = re.compile(r'Windows|Win')
     mac_pattern = re.compile(r'Macintosh|Mac OS')
     iphone_pattern = re.compile(r'iPhone')
@@ -185,18 +193,17 @@ while True:
         if re.search(windows_pattern, user_agent):
             return 'Windows'
         elif re.search(mac_pattern, user_agent):
-            if 'iPhone' in user_agent:
-                return 'iPhone'
-            elif 'iPad' in user_agent:
-                return 'iPad'
-            else:
-                return 'Mac'
+            return 'Mac'
+        elif re.search(iphone_pattern, user_agent):
+            return 'iPhone'
+        elif re.search(ipad_pattern, user_agent):
+            return 'iPad'
         elif re.search(android_pattern, user_agent):
             return 'Android'
         else:
             return 'Other'
 
-    # Function to extract browser from user agent
+    # Function to extract browser type from user agent
     def extract_browser(user_agent):
         if re.search(firefox_pattern, user_agent):
             return 'Firefox'
@@ -208,7 +215,7 @@ while True:
             return 'Edge'
         else:
             return 'Other'
-    
+
     # Device and Browser Distribution
     df['Device'] = df['User_Agent'].apply(lambda x: extract_device(x))
     df['Browser'] = df['User_Agent'].apply(lambda x: extract_browser(x))
@@ -244,7 +251,7 @@ while True:
     df['Year'] = df['Timestamp'].dt.year
 
     with trend_placeholder.container():
-        st.subheader('Trend of Views Over Time')
+        #st.subheader('Trend of Views Over Time')
         if view_by_time == 'Day':
             time_data = df.groupby(['Day', 'Month', 'Year']).size().reset_index(name='Views')
             time_data['Date'] = pd.to_datetime(time_data['Day'].astype(str) + '-' + time_data['Month'] + '-' + time_data['Year'].astype(str), format='%d-%B-%Y')
@@ -260,7 +267,6 @@ while True:
 
     # Sports Popularity Over Time
     with sports_placeholder.container():
-        st.sidebar.subheader('Sports Popularity Over Time')
         sports_data = df[df['Sport'].isin(selected_sports)]
         sports_data['Date'] = sports_data['Timestamp'].dt.to_period('M').astype(str)
         sports_trends = sports_data.groupby(['Date', 'Sport']).size().reset_index(name='Views')
@@ -272,7 +278,7 @@ while True:
     df['DayOfWeek'] = df['Timestamp'].dt.day_name()
 
     with heatmap_placeholder.container():
-        st.subheader('Peak Viewership Hours')
+        #st.subheader('Peak Viewership Hours')
         heatmap_data = df.groupby(['Hour', 'DayOfWeek']).size().reset_index(name='Views')
         heatmap_data['DayOfWeek'] = pd.Categorical(heatmap_data['DayOfWeek'], categories=[
             'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], ordered=True)
@@ -280,7 +286,11 @@ while True:
         fig = px.imshow(heatmap_data, aspect="auto", title='Peak Viewership Hours', labels={'x': 'Day of Week', 'y': 'Hour of Day', 'color': 'Number of Views'})
         fig.update_layout(xaxis_title='Day of Week', yaxis_title='Hour of Day')
         st.plotly_chart(fig, use_container_width=True)
+    
+    # Display the DataFrame
+    with df_placeholder.container():
+        st.subheader('Data')
+        st.write(df)
 
     # Sleep for a certain period before refreshing
     time.sleep(3)  # Refresh every 3 seconds
-
