@@ -1,15 +1,11 @@
-from flask import Flask, request, jsonify
-import pandas as pd
+from faker import Faker
 import random
 import datetime
-from faker import Faker
+from flask import Flask, request, jsonify
+import pandas as pd
 
-# Initialize Flask app and Faker
-app = Flask(__name__)
+# Initialize Faker
 fake = Faker()
-
-# In-memory storage for logs
-logs_df = pd.DataFrame(columns=['IP', 'Country', 'Timestamp', 'Sport', 'Status_Code', 'Bytes_Transferred', 'User_Agent', 'Time_Elapsed'])
 
 # Generate random IP address
 def generate_ip():
@@ -145,6 +141,12 @@ def generate_sample_logs(num_logs):
         logs.append(generate_log_entry())
     return logs
 
+# Initialize Flask app
+app = Flask(__name__)
+
+# In-memory storage for logs
+logs_df = pd.DataFrame(columns=['IP', 'Country', 'Timestamp', 'Sport', 'Status_Code', 'Bytes_Transferred', 'User_Agent', 'Time_Elapsed'])
+
 @app.route('/logs', methods=['POST'])
 def generate_and_receive_logs():
     global logs_df
@@ -158,11 +160,9 @@ def generate_and_receive_logs():
 def get_logs():
     global logs_df
     num_logs = int(request.args.get('num_logs', 10000))  # Default to 10000 logs
-    if len(logs_df) < 5000:
-        remaining_logs = 5000 - len(logs_df)
-        new_logs = generate_sample_logs(remaining_logs)
-        new_logs_df = pd.DataFrame(new_logs)
-        logs_df = pd.concat([logs_df, new_logs_df], ignore_index=True)
+    new_logs = generate_sample_logs(num_logs)
+    new_logs_df = pd.DataFrame(new_logs)
+    logs_df = pd.concat([logs_df, new_logs_df], ignore_index=True)
     latest_logs = logs_df.tail(num_logs).to_dict(orient='records')
     return jsonify(latest_logs), 200
 

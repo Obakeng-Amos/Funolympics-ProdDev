@@ -16,7 +16,7 @@ st.set_page_config(page_title="FunOlympics Dashboard", layout="wide")
 
 # Function to fetch logs from Flask API
 def fetch_logs(num_logs=10000):
-    response = requests.get(f"https://obakeng98.pythonanywhere.com//logs?num_logs={num_logs}")
+    response = requests.get(f"http://localhost:5000/logs?num_logs={num_logs}")
     if response.status_code == 200:
         logs = response.json()
         df = pd.DataFrame(logs)
