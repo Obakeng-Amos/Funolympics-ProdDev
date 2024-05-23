@@ -4,9 +4,7 @@ import requests
 import time
 import streamlit as st
 import datetime
-import time
 import re
-import gspread
 import altair as alt  # Import Altair
 import pandas as pd
 import numpy as np

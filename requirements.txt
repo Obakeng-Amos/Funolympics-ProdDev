@@ -1,0 +1,12 @@
+datetime
+altair
+Faker
+Flask
+numpy
+pandas
+plotly
+plotly.express
+streamlit
+millify
+folium
+
