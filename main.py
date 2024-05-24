@@ -16,7 +16,7 @@ st.set_page_config(page_title="FunOlympics Dashboard", layout="wide")
 
 # Function to fetch logs from Flask API
 def fetch_logs(num_logs=10000):
-    response = requests.get(f"Obakeng98.pythonanywhere.com/logs?num_logs={num_logs}")
+    response = requests.get(f"http://localhost:5000/logs?num_logs={num_logs}")
     if response.status_code == 200:
         logs = response.json()
         df = pd.DataFrame(logs)
@@ -251,7 +251,7 @@ while True:
     df['Year'] = df['Timestamp'].dt.year
 
     with trend_placeholder.container():
-        #st.subheader('Trend of Views Over Time')
+        st.subheader('Trend of Views Over Time')
         if view_by_time == 'Day':
             time_data = df.groupby(['Day', 'Month', 'Year']).size().reset_index(name='Views')
             time_data['Date'] = pd.to_datetime(time_data['Day'].astype(str) + '-' + time_data['Month'] + '-' + time_data['Year'].astype(str), format='%d-%B-%Y')
