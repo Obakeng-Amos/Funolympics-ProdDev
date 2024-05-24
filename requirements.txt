@@ -9,4 +9,5 @@ plotly.express
 streamlit
 millify
 folium
+Gunicorn
 
