@@ -166,5 +166,5 @@ def get_logs():
     latest_logs = logs_df.tail(num_logs).to_dict(orient='records')
     return jsonify(latest_logs), 200
 
-if __name__ == '__main__':
-    app.run(port=5000)
+#if __name__ == '__main__':
+#    app.run(port=5000)#
